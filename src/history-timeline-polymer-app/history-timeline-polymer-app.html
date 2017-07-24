@@ -1,0 +1,91 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<dom-module id="history-timeline-polymer-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+    <paper-input id="searchItem" value={{title}} label="Enter name"></paper-input>
+    <paper-button on-click="search" raised class="indigo">Search</paper-button>
+
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class HistoryTimelinePolymerApp extends Polymer.Element {
+
+      static get is() { return 'history-timeline-polymer-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'history-timeline-polymer-app'
+          },
+          searchUrl: {
+            type: String
+          },
+          title: {
+            type: String
+          },
+          result: {
+            type: Object
+          }
+        };
+      }
+      search(){
+        const url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions|pageimages&origin=*&imlimit=1&rvprop=content&rvsection=0&format=json&callback=JSON_CALLBACK&titles="
+        console.log(this.$.searchItem.value);
+        //this.searchUrl = url + this.title;
+        var httpRequest = new XMLHttpRequest();
+
+        if (!httpRequest) {
+          alert('Giving up :( Cannot create an XMLHTTP instance');
+          return false;
+        }
+        httpRequest.onreadystatechange = function(){
+          if (httpRequest.readyState === XMLHttpRequest.DONE) {
+            if (httpRequest.status === 200) {
+              var res = JSON.parse(httpRequest.response.slice(18,-1));
+              res = res.query.pages;
+              this._filterData(res);
+              //console.log(res);
+              //console.log(res);
+            } else {
+              alert('There was a problem with the request.');
+            }
+          }
+        }.bind(this);
+        httpRequest.open('GET', url + this.$.searchItem.value, true);
+        httpRequest.send();
+
+      }
+      _isPerson(inputStr){
+        if(inputStr.match(/birth_date/g)){
+          return true;
+        }else{
+          return false;
+        }
+      }
+      _filterData(data){
+        console.log(data)
+        if(this._isPerson(data[Object.keys(data)[0]].revisions[0]["*"])){
+          this.result = {"content": data[Object.keys(data)[0]].revisions[0]["*"],
+                          "title": data[Object.keys(data)[0]].title,
+                          "img": data[Object.keys(data)[0]].thumbnail.source
+                        }
+          console.log(this.result);
+        }
+      }
+    }
+
+    window.customElements.define(HistoryTimelinePolymerApp.is, HistoryTimelinePolymerApp);
+  </script>
+</dom-module>

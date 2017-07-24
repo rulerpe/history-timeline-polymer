@@ -1,0 +1,22 @@
+{
+  "hosting": {
+    "public": "build/default",
+    "rewrites": [
+      {
+        "source": "!/__/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**/!(*.js|*.html|*.css|*.json|*.svg|*.png|*.jpg|*.jpeg)",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [ {
+        "source" : "**",
+        "headers" : [ {
+          "key" : "Access-Control-Allow-Origin",
+          "value" : "*"
+        } ]
+    } ]
+  }
+}
