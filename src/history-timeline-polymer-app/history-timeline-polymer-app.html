@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="time-line.html">
 
 <dom-module id="history-timeline-polymer-app">
   <template>
@@ -12,6 +13,8 @@
     <h2>Hello [[prop1]]!</h2>
     <paper-input id="searchItem" value={{title}} label="Enter name"></paper-input>
     <paper-button on-click="search" raised class="indigo">Search</paper-button>
+
+    <time-line data="[[result]]"><time-line>
 
   </template>
 
@@ -36,13 +39,19 @@
             type: String
           },
           result: {
-            type: Object
+            type: Array,
+            value:[]
           }
         };
       }
+
+      addResult(result){
+        this.push('result', result);
+      }
+
       search(){
         const url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions|pageimages&origin=*&imlimit=1&rvprop=content&rvsection=0&format=json&callback=JSON_CALLBACK&titles="
-        console.log(this.$.searchItem.value);
+        console.log("from history-timeline"+this.$.searchItem.value);
         //this.searchUrl = url + this.title;
         var httpRequest = new XMLHttpRequest();
 
@@ -75,13 +84,13 @@
         }
       }
       _filterData(data){
-        console.log(data)
+        //console.log(data)
         if(this._isPerson(data[Object.keys(data)[0]].revisions[0]["*"])){
-          this.result = {"content": data[Object.keys(data)[0]].revisions[0]["*"],
+          this.addResult({"content": data[Object.keys(data)[0]].revisions[0]["*"],
                           "title": data[Object.keys(data)[0]].title,
                           "img": data[Object.keys(data)[0]].thumbnail.source
-                        }
-          console.log(this.result);
+                        });
+          //console.log(this.result);
         }
       }
     }

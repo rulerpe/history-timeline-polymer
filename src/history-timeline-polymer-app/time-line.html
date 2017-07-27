@@ -1,0 +1,186 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="content-column.html">
+
+<dom-module id="time-line">
+  <template>
+  <style include="app-grid-style">
+     :host {
+       display: block;
+       --app-grid-columns: [[currentSetting.column_number]];
+       --app-grid-expandible-item-columns: 1;
+       --paper-icon-button-ink-color: white;
+     }
+     ul {
+       padding: 0;
+       list-style: none;
+       width:[[currentSetting.ul_width]]
+     }
+     .centered-container {
+       margin-top: 40px;
+       width: 100%;
+     }
+     .item {
+       height: 550px;
+       position: relative;
+       background-color: white;
+       background-size: cover;
+       background-position: center center;
+       border-left: 1px solid black;
+     }
+     .born, .death{
+       height:40%;
+       width:100%
+     }
+     .event{
+       height:20%;background:#fff;width:100%;border-bottom:1px solid black
+     }
+
+
+   </style>
+   [[data]]
+   <paper-button on-click="zoomIn" raised class="indigo">+</paper-button>
+   <paper-button on-click="zoomOut" raised class="indigo">-</paper-button>
+   <div class="centered-container" style="overflow-x:scroll; ">
+      <ul class="app-grid">
+        <li class="item" style="background-color:#cfd8dc;">
+          <div class="born">Birth Year</div>
+          <div class="event">Year</div>
+          <div class="death">Death Year</div>
+        </li>
+        <template is="dom-repeat" items="[[currentData]]">
+          <li class="item" style="background-color: #cfd8dc;">
+              <div class="born">[[item.born]]</div>
+              <div class="event">
+                <div class="">
+                  [[item.year.year]]
+                </div>
+                <div class="">
+                  [[item.year.event]]
+                </div>
+              </div>
+              <div class="death">[[item.death]]</div>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </template>
+  <script>
+    console.log("test");
+    class TimeLine extends Polymer.Element {
+      static get is() { return 'time-line'; }
+      static get properties() {
+        return {
+          data: {
+            type: Array,
+            observer: '_contentChange',
+          },
+          currentSetting: {
+            type: Object,
+            value: {
+              column_number: "12",
+              ul_width: "100%",
+            }
+          },
+          zoomOutSetting: {
+            type: Object,
+            value: {
+              column_number: "12",
+              ul_width: "100%",
+            }
+          },
+          zoomInSetting: {
+            type: Object,
+            value: {
+              column_number: "103",
+              ul_width: "1000%",
+            }
+          },
+          currentData:{
+            type:Array
+          },
+          zoomInData: {
+            type: Array
+          },
+          zoomOutData: {
+            type: Array
+          }
+        };
+      }
+      constructor() {
+        super();
+        this._createZoomOutData();
+        this._createZoomInData();
+        this.currentData = this.zoomOutData
+      }
+      _contentChange(){
+        // var year = this.data.map(function(x){
+        //   return getYear(x.content)
+        // })
+        console.log("test");
+      }
+      _createZoomInData(){
+        var arr = [];
+        for(var i = 0; i<=101;i++){
+          arr.push({
+            born: [],
+            year: { "year" :i*20,
+                    "event":''
+                  },
+            death:[]
+          })
+        }
+        this.zoomInData = arr;
+      }
+      _createZoomOutData(){
+        var arr = [];
+        for(var i = 0; i<=10;i++){
+          arr.push({
+            born: [],
+            year: { "year" :i*200,
+                    "event":''
+                  },
+            death:[]
+          })
+        }
+        this.zoomOutData = arr;
+      }
+      zoomIn() {
+          this.currentSetting = this.zoomInSetting;
+          this.currentData = this.zoomInData
+      }
+      zoomOut() {
+          this.currentSetting = this.zoomOutSetting;
+          this.currentData = this.zoomOutData
+      }
+      getYear(contentStr){
+        var result = {born:"", die:""};
+        var birthStr =contentStr.match(/birth_date.*?\n/g)[0];
+        var deathStr =contentStr.match(/death_date.*?\n/g)? contentStr.match(/death_date.*?\n/g)[0]:"";
+        if(birthStr.match(/\d+\|\d+\|\d+/g)){
+          result.born = birthStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
+        }else if(birthStr.match(/\d+\s\w+\s\d+/g)){
+          result.born = birthStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
+        }else if(birthStr.match(/\d+/g)){
+          result.born = birthStr.match(/\d+/g)[0];
+        }else{
+          result.born = ""
+        }
+
+        if(deathStr.match(/\d+\|\d+\|\d+/g)){
+          result.die = deathStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
+        }else if(deathStr.match(/\d+\s\w+\s\d+/g)){
+          result.die = deathStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
+        }else if(deathStr.match(/\d+/g)){
+          result.die = deathStr.match(/\d+/g)[0];
+        }else {
+          result.die = "";
+        }
+        return result;
+      }
+    }
+    customElements.define(TimeLine.is, TimeLine);
+  </script>
+</dom-module>

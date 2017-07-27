@@ -1,0 +1,22 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<dom-module id="zoom-in">
+  <template>
+    [[data]]
+  </template>
+  <script>
+    class ZoomIn extends Polymer.Element {
+      static get is() { return 'zoom-in'; }
+      static get properties() {
+        return {
+          data: {
+            type: Array,
+          }
+        };
+      }
+      constructor() {
+        super();
+      }
+    }
+    customElements.define(ZoomIn.is, ZoomIn);
+  </script>
+</dom-module>

@@ -1,0 +1,22 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<dom-module id="content-column">
+  <template>
+    [[data]]
+  </template>
+  <script>
+    class ContentColumn extends Polymer.Element {
+      static get is() { return 'content-column'; }
+      static get properties() {
+        return {
+          data: {
+            type: Array,
+          }
+        };
+      }
+      constructor() {
+        super();
+      }
+    }
+    customElements.define(ContentColumn.is, ContentColumn);
+  </script>
+</dom-module>
