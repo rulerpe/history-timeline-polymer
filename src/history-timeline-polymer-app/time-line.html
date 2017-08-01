@@ -50,7 +50,7 @@
           <div class="event">Year</div>
           <div class="death">Death Year</div>
         </li>
-        <template is="dom-repeat" items="[[currentData]]">
+        <template id="timelineList" is="dom-repeat" items="[[currentData]]">
           <li class="item" style="background-color: #cfd8dc;">
               <div class="born">[[item.born]]</div>
               <div class="event">
@@ -74,8 +74,9 @@
       static get properties() {
         return {
           data: {
-            type: Array,
-            observer: '_contentChange',
+            type: Object,
+            observer: '_activeChanged'
+
           },
           currentSetting: {
             type: Object,
@@ -106,21 +107,61 @@
           },
           zoomOutData: {
             type: Array
+          },
+          zoomToggle: {
+            type:Boolean,
+            value:true
           }
         };
       }
+
+
+
+      _activeChanged(newValue, oldValue) {
+        console.log('oldValue:', oldValue,'newValue:', newValue);
+        // var temp = this.data.map(function(person){
+        //     var theyear = this._getYear(person.content)
+        //     console.log(parseInt(theyear.born/200))
+        if(Object.keys(newValue).length !== 0){
+          //this.zoomOutData[parseInt(newValue.year.born/200)+1].born.push(newValue)
+          this.push('zoomOutData[0].born',[newValue]);
+          this.set('')
+          //this.zoomInData[parseInt(newValue.year.born/20)+1].born.push(newValue)
+          //this.splice('zoomInData',parseInt(newValue.year.born/20)+1,1,this.zoomInData[parseInt(newValue.year.born/20)+1]);
+          this.push('zoomInData[0].born',[newValue]);
+          if(newValue.year.death){
+            //this.zoomOutData[parseInt(newValue.year.death/200)+1].death.push(newValue)
+            //this.splice('zoomOutData',parseInt(newValue.year.death/200)+1,1,this.zoomOutData[parseInt(newValue.year.death/200)+1]);
+            this.push('zoomOutData[0].death',[newValue]);
+            //this.zoomInData[parseInt(newValue.year.death/20)+1].death.push(newValue)
+            //this.splice('zoomInData',parseInt(newValue.year.death/20)+1,1,this.zoomInData[parseInt(newValue.year.death/20)+1]);
+            this.push('zoomInData[0].death',[newValue]);
+          }
+          if(this.zoomToggle){
+            this.zoomOut();
+          }else{
+            this.zoomIn();
+          }
+        }
+
+        // }.bind(this))
+        // console.log(this.zoomOutData)
+        // this.currentData = this.zoomOutData
+
+      }
+
       constructor() {
         super();
         this._createZoomOutData();
         this._createZoomInData();
         this.currentData = this.zoomOutData
       }
-      _contentChange(){
-        // var year = this.data.map(function(x){
-        //   return getYear(x.content)
-        // })
-        console.log("test");
+
+      add(){
+        this.push('currentData', "test")
+        console.log("add")
       }
+
       _createZoomInData(){
         var arr = [];
         for(var i = 0; i<=101;i++){
@@ -149,37 +190,18 @@
       }
       zoomIn() {
           this.currentSetting = this.zoomInSetting;
-          this.currentData = this.zoomInData
+          this.currentData = this.zoomInData.slice();
+          this.currentData = this.currentData.slice();
+          this.zoomToggle = false
       }
       zoomOut() {
           this.currentSetting = this.zoomOutSetting;
-          this.currentData = this.zoomOutData
+          this.currentData = this.zoomOutData.slice();
+          this.currentData = this.currentData.slice();
+          this.zoomToggle = true
+          console.log("zoomout",this.currentData)
       }
-      getYear(contentStr){
-        var result = {born:"", die:""};
-        var birthStr =contentStr.match(/birth_date.*?\n/g)[0];
-        var deathStr =contentStr.match(/death_date.*?\n/g)? contentStr.match(/death_date.*?\n/g)[0]:"";
-        if(birthStr.match(/\d+\|\d+\|\d+/g)){
-          result.born = birthStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
-        }else if(birthStr.match(/\d+\s\w+\s\d+/g)){
-          result.born = birthStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
-        }else if(birthStr.match(/\d+/g)){
-          result.born = birthStr.match(/\d+/g)[0];
-        }else{
-          result.born = ""
-        }
 
-        if(deathStr.match(/\d+\|\d+\|\d+/g)){
-          result.die = deathStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
-        }else if(deathStr.match(/\d+\s\w+\s\d+/g)){
-          result.die = deathStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
-        }else if(deathStr.match(/\d+/g)){
-          result.die = deathStr.match(/\d+/g)[0];
-        }else {
-          result.die = "";
-        }
-        return result;
-      }
     }
     customElements.define(TimeLine.is, TimeLine);
   </script>

@@ -10,7 +10,7 @@
         display: block;
       }
     </style>
-    <h2>Hello [[prop1]]!</h2>
+    <h2>Hello??? [[prop1]]!</h2>
     <paper-input id="searchItem" value={{title}} label="Enter name"></paper-input>
     <paper-button on-click="search" raised class="indigo">Search</paper-button>
 
@@ -39,16 +39,11 @@
             type: String
           },
           result: {
-            type: Array,
-            value:[]
+            type: Object,
+            value: {}
           }
         };
       }
-
-      addResult(result){
-        this.push('result', result);
-      }
-
       search(){
         const url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions|pageimages&origin=*&imlimit=1&rvprop=content&rvsection=0&format=json&callback=JSON_CALLBACK&titles="
         console.log("from history-timeline"+this.$.searchItem.value);
@@ -83,13 +78,42 @@
           return false;
         }
       }
+      _getYear(contentStr){
+        var result = {born:"", die:""};
+        var birthStr =contentStr.match(/birth_date.*?\n/g)[0];
+        var deathStr =contentStr.match(/death_date.*?\n/g)? contentStr.match(/death_date.*?\n/g)[0]:"";
+        if(birthStr.match(/\d+\|\d+\|\d+/g)){
+          result.born = birthStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
+        }else if(birthStr.match(/\d+\s\w+\s\d+/g)){
+          result.born = birthStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
+        }else if(birthStr.match(/\d+/g)){
+          result.born = birthStr.match(/\d+/g)[0];
+        }else{
+          result.born = ""
+        }
+
+        if(deathStr.match(/\d+\|\d+\|\d+/g)){
+          result.die = deathStr.match(/\d+\|\d+\|\d+/g)[0].split("|")[0];
+        }else if(deathStr.match(/\d+\s\w+\s\d+/g)){
+          result.die = deathStr.match(/\d+\s\w+\s\d+/g)[0].split(" ")[2];
+        }else if(deathStr.match(/\d+/g)){
+          result.die = deathStr.match(/\d+/g)[0];
+        }else {
+          result.die = "";
+        }
+        return result;
+      }
       _filterData(data){
         //console.log(data)
         if(this._isPerson(data[Object.keys(data)[0]].revisions[0]["*"])){
-          this.addResult({"content": data[Object.keys(data)[0]].revisions[0]["*"],
-                          "title": data[Object.keys(data)[0]].title,
-                          "img": data[Object.keys(data)[0]].thumbnail.source
-                        });
+
+          var temp = {"year": this._getYear(data[Object.keys(data)[0]].revisions[0]["*"]),
+                        "title": data[Object.keys(data)[0]].title,
+                        "img": data[Object.keys(data)[0]].thumbnail.source
+                      };
+        //  console.log(temp);
+
+          this.result = temp;
           //console.log(this.result);
         }
       }
