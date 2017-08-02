@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-styles/paper-styles.html">
 <link rel="import" href="time-line.html">
 
 <dom-module id="history-timeline-polymer-app">
@@ -9,10 +10,38 @@
       :host {
         display: block;
       }
+      .searchBox{
+        width:50%;
+        margin:30px auto;
+        text-align: center;
+      }
+      .searchBox paper-input,.searchBox paper-button{
+        display: inline-block;
+      }
+      .theInput{
+        position: relative;
+      }
+      .shadow{
+        position:absolute;
+        width:100%;
+        cursor: pointer;
+      }
+      .shadow:hover{
+        background: #f5f5f5;
+      }
+      .shadow-2dp { @apply --shadow-elevation-2dp; }
+      .paper-font-body1 { @apply --paper-font-body1; }
     </style>
-    <h2>Hello??? [[prop1]]!</h2>
-    <paper-input id="searchItem" value={{title}} label="Enter name"></paper-input>
-    <paper-button on-click="search" raised class="indigo">Search</paper-button>
+    <div class="searchBox">
+      <div class="theInput" style="display:inline-block">
+        <paper-input id="searchItem" value={{title}} label="Enter name"></paper-input>
+        <div class="shadow shadow-2dp paper-font-body1" on-click="completeInput" id="autocomplete">
+          [[autoComplete]]
+      </div>
+      </div>
+      <paper-button on-click="search" raised class="indigo">Search</paper-button>
+    </div>
+
 
     <time-line data="[[result]]"><time-line>
 
@@ -36,39 +65,72 @@
             type: String
           },
           title: {
-            type: String
+            type: String,
+            observer: '_inputChange'
           },
           result: {
             type: Object,
             value: {}
+          },
+          autoComplete: {
+            type: String,
+            value: ""
           }
         };
       }
-      search(){
-        const url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions|pageimages&origin=*&imlimit=1&rvprop=content&rvsection=0&format=json&callback=JSON_CALLBACK&titles="
-        console.log("from history-timeline"+this.$.searchItem.value);
-        //this.searchUrl = url + this.title;
-        var httpRequest = new XMLHttpRequest();
 
-        if (!httpRequest) {
-          alert('Giving up :( Cannot create an XMLHTTP instance');
-          return false;
-        }
-        httpRequest.onreadystatechange = function(){
-          if (httpRequest.readyState === XMLHttpRequest.DONE) {
-            if (httpRequest.status === 200) {
-              var res = JSON.parse(httpRequest.response.slice(18,-1));
-              res = res.query.pages;
-              this._filterData(res);
-              //console.log(res);
-              //console.log(res);
-            } else {
-              alert('There was a problem with the request.');
+      _inputChange(){
+        this._wikiSearch().then(function(res){
+          this._findRedirect(res);
+        }.bind(this))
+      }
+      completeInput(){
+        this.title = this.autoComplete;
+        this.autoComplete = ''
+      }
+
+      search(){
+        this._wikiSearch().then(function(res){
+          this._filterData(res);
+        }.bind(this))
+
+
+      }
+
+      _wikiSearch(){
+        return new Promise(
+          function (resolve, reject){
+            const url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions|pageimages&origin=*&imlimit=1&rvprop=content&rvsection=0&format=json&callback=JSON_CALLBACK&titles="
+            console.log("from history-timeline"+this.$.searchItem.value);
+            //this.searchUrl = url + this.title;
+            var httpRequest = new XMLHttpRequest();
+
+            if (!httpRequest) {
+              alert('Giving up :( Cannot create an XMLHTTP instance');
+              return false;
             }
-          }
-        }.bind(this);
-        httpRequest.open('GET', url + this.$.searchItem.value, true);
-        httpRequest.send();
+            httpRequest.onreadystatechange = function(){
+              if (httpRequest.readyState === XMLHttpRequest.DONE) {
+                if (httpRequest.status === 200) {
+                  var res = JSON.parse(httpRequest.response.slice(18,-1));
+                  res = res.query.pages;
+                  //console.log(res);
+                  if(!res['-1']){
+                    resolve(res);
+
+                  }
+                  //console.log(res);
+                  //console.log(res);
+                } else {
+                  alert('There was a problem with the request.');
+                  reject("call fail")
+                }
+              }
+            }.bind(this);
+            httpRequest.open('GET', url + this.$.searchItem.value, true);
+            httpRequest.send();
+          }.bind(this)
+        )
 
       }
       _isPerson(inputStr){
@@ -104,7 +166,7 @@
         return result;
       }
       _filterData(data){
-        //console.log(data)
+        console.log(data)
         if(this._isPerson(data[Object.keys(data)[0]].revisions[0]["*"])){
 
           var temp = {"year": this._getYear(data[Object.keys(data)[0]].revisions[0]["*"]),
@@ -112,9 +174,17 @@
                         "img": data[Object.keys(data)[0]].thumbnail.source
                       };
         //  console.log(temp);
-
+        this.$.searchItem.value = "";
           this.result = temp;
           //console.log(this.result);
+        }
+      }
+      _findRedirect(data){
+        //console.log(data[Object.keys(data)[0]].revisions[0]["*"]);
+        if(data[Object.keys(data)[0]].revisions[0]["*"].match(/(#REDIRECT|#redirect|#Redirect)/g)){
+          var redirectValue = data[Object.keys(data)[0]].revisions[0]["*"].match(/\[\[.+\]\]/g)[0].slice(2,-2)
+          //console.log(redirectValue)
+          this.autoComplete = redirectValue
         }
       }
     }
