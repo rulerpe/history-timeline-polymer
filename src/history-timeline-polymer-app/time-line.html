@@ -50,18 +50,30 @@
           <div class="event">Year</div>
           <div class="death">Death Year</div>
         </li>
-        <template id="timelineList" is="dom-repeat" items="[[currentData]]">
+        <template id="timelineList" is="dom-repeat" items="{{currentData}}" as ="timeSlot">
           <li class="item" style="background-color: #cfd8dc;">
-              <div class="born">[[item.born]]</div>
+              <div class="born">
+                <template is="dom-repeat" items="{{timeSlot.born}}" as="person"index-as="person_index">
+                  <img src="[[person.img]]" alt="">
+                  <p>[[person.title]]</p>
+                  <p>[[person.year.born]]</p>
+                </template>
+              </div>
               <div class="event">
                 <div class="">
-                  [[item.year.year]]
+                  [[timeSlot.year.year]]
                 </div>
                 <div class="">
-                  [[item.year.event]]
+                  [[timeSlot.year.event]]
                 </div>
               </div>
-              <div class="death">[[item.death]]</div>
+              <div class="death">
+                <template is="dom-repeat" items="{{timeSlot.death}}" as="person"index-as="person_index">
+                  <img src="[[person.img]]" alt="">
+                  <p>[[person.title]]</p>
+                  <p>[[person.year.die]]</p>
+                </template>
+              </div>
           </li>
         </template>
       </ul>
@@ -119,23 +131,41 @@
 
       _activeChanged(newValue, oldValue) {
         console.log('oldValue:', oldValue,'newValue:', newValue);
-        // var temp = this.data.map(function(person){
-        //     var theyear = this._getYear(person.content)
-        //     console.log(parseInt(theyear.born/200))
+
         if(Object.keys(newValue).length !== 0){
-          //this.zoomOutData[parseInt(newValue.year.born/200)+1].born.push(newValue)
-          this.push('zoomOutData[0].born',[newValue]);
-          this.set('')
-          //this.zoomInData[parseInt(newValue.year.born/20)+1].born.push(newValue)
-          //this.splice('zoomInData',parseInt(newValue.year.born/20)+1,1,this.zoomInData[parseInt(newValue.year.born/20)+1]);
-          this.push('zoomInData[0].born',[newValue]);
-          if(newValue.year.death){
-            //this.zoomOutData[parseInt(newValue.year.death/200)+1].death.push(newValue)
-            //this.splice('zoomOutData',parseInt(newValue.year.death/200)+1,1,this.zoomOutData[parseInt(newValue.year.death/200)+1]);
-            this.push('zoomOutData[0].death',[newValue]);
-            //this.zoomInData[parseInt(newValue.year.death/20)+1].death.push(newValue)
-            //this.splice('zoomInData',parseInt(newValue.year.death/20)+1,1,this.zoomInData[parseInt(newValue.year.death/20)+1]);
-            this.push('zoomInData[0].death',[newValue]);
+          var zoomOutBornIndex = parseInt(newValue.year.born/200)+1;
+          var zoomInBornIndex = parseInt(newValue.year.born/20)+1;
+
+          var zoomOutBorn = this.zoomOutData[zoomOutBornIndex];
+          var zoomInBorn = this.zoomInData[zoomInBornIndex];
+
+          var bornOutData = zoomOutBorn.born.slice();
+          var bornInData = zoomInBorn.born.slice();
+
+          bornOutData.push(newValue);
+          bornInData.push(newValue);
+          this.set('zoomOutData.'+ zoomOutBornIndex, {born: bornOutData,year:zoomOutBorn.year,death:zoomOutBorn.death});
+          //this.push('zoomOutData.'+ zoomOutBornIndex+'.born',newValue)
+          this.set('zoomInData.'+ zoomInBornIndex, {born: bornInData,year:zoomInBorn.year,death:zoomInBorn.death});
+          //this.push('zoomInData.'+ zoomInBornIndex+'.born',newValue)
+          if(newValue.year.die){
+            var zoomOutDeathIndex = parseInt(newValue.year.die/200)+1;
+            var zoomInDeathIndex = parseInt(newValue.year.die/20)+1;
+
+            var zoomOutDeath = this.zoomOutData[zoomOutDeathIndex];
+            var zoomInDeath = this.zoomInData[zoomInDeathIndex];
+
+            var deathOutData = zoomOutBorn.death.slice();
+            var deathInData = zoomInBorn.death.slice();
+
+            deathOutData.push(newValue);
+            deathInData.push(newValue);
+
+            this.set('zoomOutData.'+ zoomOutDeathIndex, {born: zoomOutDeath.born,year:zoomOutDeath.year,death:deathOutData});
+            //this.push('zoomOutData.'+ zoomOutDeathIndex+'.death',newValue)
+            this.set('zoomInData.'+ zoomInDeathIndex, {born: zoomInDeath.bron,year:zoomInDeath.year,death:deathInData});
+            //this.push('zoomInData.'+ zoomInDeathIndex+'.death',newValue)
+
           }
           if(this.zoomToggle){
             this.zoomOut();
@@ -191,13 +221,11 @@
       zoomIn() {
           this.currentSetting = this.zoomInSetting;
           this.currentData = this.zoomInData.slice();
-          this.currentData = this.currentData.slice();
           this.zoomToggle = false
       }
       zoomOut() {
           this.currentSetting = this.zoomOutSetting;
           this.currentData = this.zoomOutData.slice();
-          this.currentData = this.currentData.slice();
           this.zoomToggle = true
           console.log("zoomout",this.currentData)
       }
